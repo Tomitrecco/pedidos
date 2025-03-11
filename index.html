@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador con Curva de Talles y Colores</title>
+
+    <!-- Estilos de Select2 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+
+        /* Contenedor para cliente, imagen/título y fecha */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        /* Contenedor central para imagen y título */
+        .center-container {
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        .center-container img {
+            width: 80px; /* Ajusta el tamaño de la imagen */
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .cliente-container, .fecha-container {
+            width: 30%;
+        }
+
+        .center-container img {
+        width: 200px; /* Ajusta el tamaño según lo necesites */
+        height: auto; /* Mantiene la proporción */
+    }
+
+        select, input {
+            width: 80%;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 5px;
+            text-align: center;
+            width: auto;
+        }
+
+        td input {
+            width: 80%;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 15px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .oculto {
+            display: none;
+        }
+
+        /* Media Query para pantallas pequeñas */
+        @media (max-width: 768px) {
+            .top-bar {
+                flex-direction: column;
+                align-items: center;
+            }
+            .cliente-container, .fecha-container {
+                width: 100%;
+                text-align: center;
+                margin-bottom: 10px;
+            }
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Contenedor superior con cliente, imagen/título en el centro y fecha -->
+    <div class="top-bar">
+        <div class="cliente-container">
+            <h2>Selecciona un Cliente</h2>
+            <select id="clienteSelect">
+                <option value="">-- Elige un cliente --</option>
+                <option value="ClienteA">Cliente A</option>
+                <option value="ClienteB">Cliente B</option>
+                <option value="ClienteC">Cliente C</option>
+            </select>
+        </div>
+
+        <div class="center-container">
+            <img src="imagenes/image.png" alt="GrupoAct">
+            <h1>Pedidos Indumentaria</h1>
+        </div>
+
+        <div class="fecha-container">
+            <h2>Selecciona una Fecha</h2>
+            <input type="date" id="fechaSelect" />
+        </div>
+    </div>
+
+    <h3>Selecciona un Código</h3>
+    <select id="codigoSelect">
+        <option value="">-- Escribe para buscar un código --</option>
+        <option value="1001" data-curva='["XS", "S", "M", "L"]' data-colores='["Blanco", "Negro", "Azul"]'>1001</option>
+        <option value="1002" data-curva='["36", "38", "40", "42", "44"]' data-colores='["Rojo", "Verde", "Amarillo"]'>1002</option>
+        <option value="1003" data-curva='["M", "L", "XL"]' data-colores='["Marrón", "Gris", "Celeste"]'>1003</option>
+    </select>
+
+    <div id="curvaContainer" class="oculto">
+        <h3>Curva de Talles para Código: <span id="codigoSeleccionado"></span></h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>Color / Talle</th></tr>
+                </thead>
+                <tbody id="pedidoBody"></tbody>
+            </table>
+        </div>
+        <button onclick="agregarPedido()">Agregar Pedido</button>
+    </div>
+
+    <h3>Lista de Pedidos</h3>
+    <div class="table-container">
+        <table id="pedidosTabla">
+            <tbody>
+                <tr>
+                    <th>Artículo</th>
+                    <th>Color</th>
+                    <th>Talle</th>
+                    <th>Cantidad</th>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <button onclick="descargarCSV()">Descargar CSV</button>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#codigoSelect').select2({ placeholder: "Escribe para buscar un código", allowClear: true });
+            $('#clienteSelect').select2({ placeholder: "Selecciona un cliente", allowClear: true });
+
+            $('#codigoSelect').on('change', function() {
+                let selectedOption = this.options[this.selectedIndex];
+                if (selectedOption.value === "") {
+                    $("#curvaContainer").addClass("oculto");
+                    return;
+                }
+
+                let codigo = selectedOption.value;
+                let curva = JSON.parse(selectedOption.getAttribute("data-curva"));
+                let colores = JSON.parse(selectedOption.getAttribute("data-colores"));
+
+                $("#codigoSeleccionado").text(codigo);
+
+                let pedidoBody = $("#pedidoBody");
+                let headerRow = $("thead tr");
+
+                pedidoBody.html("");
+                let headerHTML = "<th>Color / Talle</th>";
+                curva.forEach(talle => { headerHTML += "<th>" + talle + "</th>"; });
+                headerRow.html(headerHTML);
+
+                colores.forEach(color => {
+                    let tr = $("<tr>").append($("<td>").text(color));
+                    curva.forEach(talle => {
+                        let td = $("<td>").append($("<input>").attr({ type: "number", min: 0, "data-color": color, "data-talle": talle }));
+                        tr.append(td);
+                    });
+                    pedidoBody.append(tr);
+                });
+
+                $("#curvaContainer").removeClass("oculto");
+            });
+        });
+
+        function agregarPedido() {
+            let codigo = $("#codigoSeleccionado").text();
+            let pedidosTabla = $("#pedidosTabla tbody");
+
+            $("#pedidoBody input").each(function() {
+                let cantidad = parseInt($(this).val());
+                let talle = $(this).data("talle");
+                let color = $(this).data("color");
+
+                if (cantidad > 0) {
+                    let fila = $("<tr>").append($("<td>").text(codigo), $("<td>").text(color), $("<td>").text(talle), $("<td>").text(cantidad));
+                    pedidosTabla.append(fila);
+                }
+            });
+
+            $("#curvaContainer").addClass("oculto");
+            $("#codigoSelect").val("").trigger("change");
+        }
+
+        function descargarCSV() {
+            let cliente = $("#clienteSelect").val();
+            let fecha = $("#fechaSelect").val();
+            if (!cliente || !fecha) {
+                alert("Por favor, selecciona un cliente y una fecha.");
+                return;
+            }
+
+            let csv = `Fecha,Cliente,Artículo,Color,Talle,Cantidad\n${fecha},${cliente}\n`;
+            $("#pedidosTabla tbody tr").each(function() {
+                let cells = $(this).find('td');
+                csv += `,${cells.eq(0).text()},${cells.eq(1).text()},${cells.eq(2).text()},${cells.eq(3).text()}\n`;
+            });
+
+            let hiddenElement = document.createElement('a');
+            hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+            hiddenElement.download = `${cliente}_${fecha}_pedidos.csv`;
+            hiddenElement.click();
+        }
+    </script>
+
+</body>
+</html>
