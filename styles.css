@@ -1,0 +1,83 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 20px;
+}
+
+/* Contenedor para cliente, imagen/título y fecha */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+/* Contenedor central para imagen y título */
+.center-container {
+    text-align: center;
+    flex-grow: 1;
+}
+
+.center-container img {
+    width: 200px; /* Ajusta el tamaño según lo necesites */
+    height: auto; /* Mantiene la proporción */
+}
+
+.cliente-container, .fecha-container {
+    width: 30%;
+}
+
+select, input {
+    width: 80%;
+    padding: 10px;
+    font-size: 16px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+table {
+    width: 80%;
+    margin: 20px auto;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 5px;
+    text-align: center;
+    width: auto;
+}
+
+td input {
+    width: 80%;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+button {
+    padding: 10px 15px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+.oculto {
+    display: none;
+}
+
+/* Media Query para pantallas pequeñas */
+@media (max-width: 768px) {
+    .top-bar {
+        flex-direction: column;
+        align-items: center;
+    }
+    .cliente-container, .fecha-container {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+}
+
+.table-container {
+    overflow-x: auto;
+}
